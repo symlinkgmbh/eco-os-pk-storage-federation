@@ -19,23 +19,28 @@
 
 import { PkStorageFederation, PkStorage, MsFederation } from "@symlinkde/eco-os-pk-models";
 import { injectable } from "inversify";
-import { storageContainer, STORAGE_TYPES } from "@symlinkde/eco-os-pk-storage";
+import { storageContainer, STORAGE_TYPES, AbstractBindings } from "@symlinkde/eco-os-pk-storage";
 import Config from "config";
 import { bootstrapperContainer } from "@symlinkde/eco-os-pk-core";
 
 @injectable()
-export class FederationService implements PkStorageFederation.IFederationService {
+export class FederationService extends AbstractBindings implements PkStorageFederation.IFederationService {
   private federationRepro: PkStorage.IMongoRepository<MsFederation.IFederationStorageObject>;
 
   public constructor() {
-    storageContainer.bind(STORAGE_TYPES.Collection).toConstantValue(Config.get("mongo.collection"));
-    storageContainer.bind(STORAGE_TYPES.Database).toConstantValue(Config.get("mongo.db"));
-    storageContainer.bind(STORAGE_TYPES.StorageTarget).toConstantValue("SECONDLOCK_MONGO_FEDERATION_DATA");
-    storageContainer
-      .bind(STORAGE_TYPES.SECONDLOCK_REGISTRY_URI)
-      .toConstantValue(bootstrapperContainer.get("SECONDLOCK_REGISTRY_URI"));
+    super(storageContainer);
 
-    this.federationRepro = storageContainer.getTagged<
+    this.initDynamicBinding(
+      [STORAGE_TYPES.Database, STORAGE_TYPES.Collection, STORAGE_TYPES.StorageTarget],
+      [Config.get("mongo.db"), Config.get("mongo.collection"), "SECONDLOCK_MONGO_FEDERATION_DATA"],
+    );
+
+    this.initStaticBinding(
+      [STORAGE_TYPES.SECONDLOCK_REGISTRY_URI],
+      [bootstrapperContainer.get("SECONDLOCK_REGISTRY_URI")],
+    );
+
+    this.federationRepro = this.getContainer().getTagged<
       PkStorage.IMongoRepository<MsFederation.IFederationStorageObject>
     >(STORAGE_TYPES.IMongoRepository, STORAGE_TYPES.STATE_LESS, false);
   }

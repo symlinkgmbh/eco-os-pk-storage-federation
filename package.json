@@ -1,6 +1,6 @@
 {
   "name": "@symlinkde/eco-os-pk-storage-federation",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Package containing storage adapter for federation service.",
   "types": "lib/index.d.ts",
   "main": "lib/index.js",
